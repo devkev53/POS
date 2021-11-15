@@ -37,6 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Installed apps
+    'core',
+    'registration',
+    'product',
+    'inventory',
+    'sale',
+    'shift',
+    'store',
 ]
 
 MIDDLEWARE = [
@@ -47,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'crum.CurrentRequestUserMiddleware', # django-crum para uditar las creaciones
 ]
 
 ROOT_URLCONF = 'POS.urls'
@@ -123,3 +132,13 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'registration.User'
+
+# LOGIN REDIRECT PATH
+LOGIN_REDIRECT_URL = 'home'
+
+# LOGIN REDIRECT PATH
+LOGOUT_REDIRECT_URL = 'logout'
+
+LOGIN_URL = 'login'
