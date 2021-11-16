@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Installed apps
+    'debug_toolbar',
+    # My Apps
     'core',
     'registration',
     'product',
@@ -56,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'crum.CurrentRequestUserMiddleware', # django-crum para uditar las creaciones
+    'debug_toolbar.middleware.DebugToolbarMiddleware', # para hacer debuggin
 ]
 
 ROOT_URLCONF = 'POS.urls'
@@ -112,7 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-gt'
 
 TIME_ZONE = 'UTC'
 
@@ -142,3 +145,8 @@ LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'logout'
 
 LOGIN_URL = 'login'
+
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]

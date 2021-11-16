@@ -1,0 +1,35 @@
+{% extends 'core/base.html' %} {% load static %}
+
+<!-- Bloque extra css -->
+{% block extra_css %} {% endblock extra_css %}
+
+
+<!-- Contenido -->
+{% block content %}
+<div class="card shadow mb-4 border-left-success">
+    <div class="card-header d-flex py-3">
+        <h3 class="m-0 font-weight-bold text-success">
+            {% block title_form %} {% endblock title_form %}
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="-responsive">
+            <div class="col-sm-12">
+
+                <!-- Contenido del Formulario -->
+                {% block form %} {% endblock form %}
+
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+</div>
+{% block list_title %} {% endblock list_title %} {% endblock content %}
+
+<!-- Bloque extra js -->
+{% block extra_js %}
+<script>
+</script>
+{% endblock extra_js %}

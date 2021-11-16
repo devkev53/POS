@@ -1,0 +1,49 @@
+{% extends 'core/list_base.html' %}
+
+<!-- Contenido -->
+{% block title_list %}
+<i class="fas fa-users"></i> Listado de Usuarios
+<!--  -->
+{% endblock title_list %}
+
+
+<!-- Bloque para ir a agregar nuevo -->
+{% block add_page %}
+<a href="{% url 'users-new' %}" class="btn btn-info btn-icon-split ml-auto">
+    <span class="icon text-white-50">
+        <i class="fas fa-user-plus"></i>
+    </span>
+    <span class="text">Nuevo Usuario</span>
+</a>
+<!--  -->
+{% endblock add_page %}
+
+<!-- Colocamos las filas y columnas del encabezado de la taba -->
+{% block thead %}
+<tr>
+    <th>Usuario</th>
+    <th>Nombre</th>
+    <th>Rol</th>
+    <th>Sucursal</th>
+    <th>Acciones</th>
+</tr>
+{% endblock thead %}
+
+<!-- Colocamos la logica de las filas de la tabla -->
+{% block tbody %}
+<!-- creamos el for para recorrer el objeto -->
+{% for profile in object_list %}
+<tr>
+    <td>{{profile.user.username}}</td>
+    <td>{{profile.user.first_name}} {{profile.user.last_name}}</td>
+    <td>{{profile.role}}</td>
+    <td>{{profile.store}}</td>
+    <td>
+        <a href=""><i class="fas fa-edit"></i></a>
+        <a href=""><i class="fas fa-trash-alt"></i></a>
+        <a href=""><i class="fas fa-eye"></i></a>
+    </td>
+</tr>
+{% endfor %}
+<!--  -->
+{% endblock tbody %}

@@ -1,0 +1,38 @@
+{% extends 'core/form_base.html' %} {% load static %}
+
+<!-- Bloque extra css -->
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}"> {% endblock extra_css %}
+
+
+<!-- Contenido -->
+{% block title_form %}
+<i class="fas fa-user-plus"></i> Nuevo Usuario
+<!--  -->
+{% endblock title_form %}
+
+
+<!-- Armamos el formulario -->
+{% block form %}
+<form action="">
+    <div class="user_info">
+        <div class="user col-10 d-flex flex-wrap justify-content-between">
+            <input class="col-sm-12 col-xl-3 mr-xl-1 mb-sm-2" type="text" name="username" id="id_username" placeholder="Usuario" autocomplete="off">
+            <input class="col-sm-12 col-xl-4 mr-xl-1 mb-sm-2" type="password" name="id_password1" id="id_username" placeholder="Contraseña" autocomplete="off">
+            <input class="col-sm-12 col-xl-4 mr-xl-1 mb-sm-2" type="password" name="id_password2" id="id_username" placeholder="Repita su Contraseña" autocomplete="off">
+        </div>
+        <div class="personal_info">
+            <input type="text" name="first_name" id="id_first_name" placeholder="Nombres" autocomplete="off">
+            <input type="text" name="last_name" id="id_last_name" placeholder="Apellidos" autocomplete="off">
+            <input type="email" name="emial" id="id_emial" placeholder="Correo Electronico" autocomplete="off">
+        </div>
+        <div class="profile_info">
+            <input type="text" name="username" id="id_username" placeholder="Usuario" autocomplete="off">
+            <input type="password" name="id_password1" id="id_username" placeholder="Contraseña" autocomplete="off">
+            <input type="password" name="id_password2" id="id_username" placeholder="Repita su Contraseña" autocomplete="off">
+        </div>
+    </div>
+    {{form}} {{formUser}}
+</form>
+<!--  -->
+{% endblock form %}
