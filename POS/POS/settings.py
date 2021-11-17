@@ -42,7 +42,10 @@ INSTALLED_APPS = [
     # My Apps
     'core',
     'store',
-    'depot'
+    'depot',
+    'product',
+    'employe',
+    'provider'
 ]
 
 MIDDLEWARE = [
@@ -132,17 +135,14 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'registration.User'
+# LOGIN REDIRECT PATH
+# LOGIN_REDIRECT_URL = 'home'
 
 # LOGIN REDIRECT PATH
-LOGIN_REDIRECT_URL = 'home'
-
-# LOGIN REDIRECT PATH
-LOGOUT_REDIRECT_URL = 'logout'
 
 LOGIN_URL = 'login'
 
 
-INTERNAL_IPS = [
+'''INTERNAL_IPS = [
     '127.0.0.1',
-]
+]'''
