@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     # Installed apps
     # 'debug_toolbar',
     # My Apps
+    'core',
+    'store',
+    'depot'
 ]
 
 MIDDLEWARE = [
