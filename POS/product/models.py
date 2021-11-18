@@ -27,7 +27,7 @@ class Product(BaseModel):
         blank=True, null=True)
     state = models.BooleanField('Estado', default=False)
     price_in = models.DecimalField('Precio Compra', max_digits=8, decimal_places=2, default=0)
-    price_out = models.DecimalField('Precio Compra', max_digits=8, decimal_places=2, default=0)
+    price_out = models.DecimalField('Precio Venta', max_digits=8, decimal_places=2, default=0)
 
 
 

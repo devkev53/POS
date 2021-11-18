@@ -24,7 +24,7 @@ class BaseModel(models.Model):
         User, on_delete=models.PROTECT, blank=True, null=True,
         verbose_name='Modificado por:', related_name='Modificado%(app_label)s_%(class)s_related',
         editable=False)
-    createDate = models.DateField('Fecha Modificacion:', auto_now=True, blank=True, null=True)
+    updateDate = models.DateField('Fecha Modificacion:', auto_now=True, blank=True, null=True)
 
     class Meta:
         abstract = True

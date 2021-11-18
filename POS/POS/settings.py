@@ -38,14 +38,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Installed apps
+    'rangefilter',
+    'import_export',
     # 'debug_toolbar',
     # My Apps
     'core',
     'store',
-    'depot',
     'product',
     'employe',
-    'provider'
+    'provider',
+    'sale',
 ]
 
 MIDDLEWARE = [

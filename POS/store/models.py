@@ -6,8 +6,31 @@ from product.models import Product
 from provider.models import Provider
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
+from django.utils.html import format_html
 
 # Create your models here.
+
+STATE_CHOICES = (
+    (0, 'Pendiente'),
+    (1, 'Aprobado'),
+    (2, 'Rechazado'),
+)
+
+# Funcion global que muestra el estado de las entradas
+def state_view(value):
+    color = ''
+    text = ''
+    if value == 0:
+        color = '#FF7800'
+        text = 'Pendiente'
+    elif value == 1:
+        color = '#009A19'
+        text = 'Aprobado'
+    else:
+        color = '#D7142B'
+        text = 'Rechazado'
+    
+    return '<span style="background:'+ color +'; font-weight:bold; border-radius: 5px; padding: 5px; margin: 2px;">'+ text +'</span>'
 
 class Store(BaseModel):
     name = models.CharField('Nombre', max_length=75)
@@ -35,6 +58,7 @@ class BaseMove(BaseModel):
     total = models.DecimalField(
         'Total', max_digits=12, decimal_places=2, editable=False,
         blank=True, null=True, default=0.0)
+    state = models.PositiveSmallIntegerField('Estado', choices=STATE_CHOICES, default=0)
 
 
     def __str__(self):
@@ -83,19 +107,28 @@ class Transfer(BaseMove):
         verbose_name_plural = 'Movimientos'
 
     def calculate_total(self):
-        for detail in DetailTransfer.objects.filter(Transfer=self.id):
-            self.total += detail.subtotal 
+        total = 0
+        for detail in DetailTransfer.objects.filter(transfer=self.id):
+            total += detail.subtotal
+        self.total = total
+        return 'Q. %s' % self.total
+
+    # Funcion que llama a la global para el estado de entradas
+    def state_transfer(self):
+        valores = state_view(self.state)
+        return format_html(valores)
+    state_transfer.short_description = 'Estado'
 
     def clean(self) -> None:
         self.calculate_total()
         return super().clean()
 
 class DetailTransfer(BaseDetailMove):
-    tranfer = models.ForeignKey(
+    transfer = models.ForeignKey(
         Transfer, on_delete=models.CASCADE, verbose_name='Transferencia')
 
     def __str__(self):
-        return (self.proproduct, self.quantity, self.subtotal)
+        return '%s, %s, %s' % (self.product, self.quantity, self.subtotal)
 
     class Meta:
         db_table = ''
@@ -104,9 +137,11 @@ class DetailTransfer(BaseDetailMove):
         verbose_name_plural = 'Detalle Movimientos'
     
     def check_origin_stock(self):
-        if StoreInventory.objects.filter(id=self.tranfer.origin.id, product=self.product.id).exists():
-            origin_quantity = StoreInventory.objects.filter(id=self.tranfer.origin.id, product=self.product.id).get()
-            if self.quantity > origin_quantity.stocks:
+        if StoreInventory.objects.filter(store=self.transfer.origin.id, product=self.product).exists():
+            origin_quantity = StoreInventory.objects.filter(store=self.transfer.origin.id, product=self.product.id).get()
+            actual_stock = origin_quantity.stocks()
+            print(actual_stock)
+            if self.quantity > actual_stock:
                 raise ValidationError(
                     'No hay suficientes existencias, únicamente hay: {}'.format(origin_quantity))
         else: 
@@ -114,23 +149,28 @@ class DetailTransfer(BaseDetailMove):
                     'La tienda no cuenta con el producto')
     
     def add_destiny_stock(self):
-        try:
-            obj = StoreInventory.objects.filter(store=self.entry.destiny, product=self.product).get()
-            obj.stocks += self.quantity
-            obj.save()
-        except StoreInventory.DoesNotExist:
-            obj = StoreInventory(store=self.destiny, product=self.product, stocks=self.quantity)
-            obj.save()
+        if self.transfer.state == 1:
+            print('-*-*-*-*-*-*- Entro aqui -*-*-*-*-*-*-')
+            try:
+                obj = StoreInventory.objects.filter(store=self.transfer.destiny, product=self.product).get()
+                obj.save()
+            except StoreInventory.DoesNotExist:
+                obj = StoreInventory(
+                    store=self.transfer.destiny, product=self.product)
+                obj.save()
     
     def calculate_subtotal(self):
-        self.subtotal = self.product.price_in * self.quantity
+        self.subtotal = float(self.product.price_in) * float(self.quantity)
 
 
     def clean(self) -> None:
         self.check_origin_stock()
-        self.calculate_subtotal()
-        self.add_destiny_stock()
         return super().clean()
+    
+    def save(self):
+        # self.add_destiny_stock()
+        self.calculate_subtotal()
+        super(DetailTransfer, self).save()
 
 class Entry(BaseMove):
     destiny = models.ForeignKey(
@@ -149,9 +189,15 @@ class Entry(BaseMove):
     def calculate_total(self):
         total = 0
         for detail in DetailEntry.objects.filter(entry=self.id):
-            print(detail)
             total += detail.subtotal
         self.total = total
+        return 'Q. %s' % self.total
+
+    # Funcion que llama a la global para el estado de entradas
+    def state_entry(self):
+        valores = state_view(self.state)
+        return format_html(valores)
+    state_entry.short_description = 'Estado'
 
     def clean(self) -> None:
         self.calculate_total()
@@ -173,25 +219,26 @@ class DetailEntry(BaseDetailMove):
         verbose_name_plural = 'Detalle Entradas'
 
     def add_destiny_stock(self):
-        try:
-            obj = StoreInventory.objects.filter(entry=self.entry, product=self.product).get()
-            print(obj)
-            obj.stocks += self.quantity
-            obj.save()
-        except StoreInventory.DoesNotExist:
-            obj = StoreInventory(
-                store=self.entry.destiny, product=self.product, stocks=self.quantity, entry=self.entry)
-            obj.save()
+        if self.entry.state == 1:
+            print('-*-*-*-*-*-*- Entro aqui -*-*-*-*-*-*-')
+            try:
+                obj = StoreInventory.objects.filter(store=self.entry.destiny, product=self.product).get()
+                obj.save()
+            except StoreInventory.DoesNotExist:
+                obj = StoreInventory(
+                    store=self.entry.destiny, product=self.product)
+                obj.save()
 
     def calculate_subtotal(self):
         self.subtotal = float(self.product.price_in) * float(self.quantity)
         
 
     def clean(self) -> None:
+        self.calculate_subtotal()
         return super().clean()
     
     def save(self):
-        self.add_destiny_stock()
+        # self.add_destiny_stock()
         self.calculate_subtotal()
         super(DetailEntry, self).save()
 
@@ -200,17 +247,31 @@ class StoreInventory(BaseModel):
         Store, on_delete=models.CASCADE, verbose_name='Tienda')
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, verbose_name='Producto')
-    stocks = models.PositiveIntegerField('Existencias', default=0)
-    entry = models.ForeignKey(
-        Entry, on_delete=models.CASCADE, blank=True, null=True,
-        editable=False)
-    transfer = models.ForeignKey(
-        Transfer, on_delete=models.CASCADE, blank=True, null=True,
-        editable=False)
+    # stocks = models.PositiveIntegerField('Existencias', default=0)
 
     
     def __str__(self):
-        return '%s, %s' % (self.product, self.stocks)
+        return '%s, %s' % (self.product, self.stocks())
+
+    def stocks(self):
+        total = 0
+        # Sumar Stocks con entrdas
+        for entry in Entry.objects.filter(destiny=self.store, state=1):
+            for detail in DetailEntry.objects.filter(product=self.product, entry=entry):
+                total += detail.quantity
+
+        # Sumar Stocks con Movimientos
+        for transfer in Transfer.objects.filter(destiny=self.store, state=1):
+            for detail in DetailTransfer.objects.filter(product=self.product, transfer=transfer):
+                total += detail.quantity
+
+        # Restar Stocks con entrdas
+        for transfer in Transfer.objects.filter(origin=self.store, state=1):
+            for detail in DetailTransfer.objects.filter(product=self.product, transfer=transfer):
+                total -= detail.quantity
+
+        return total
+
 
     class Meta:
         permissions = [('can_deliver_pizzas', 'Can deliver pizzas')]
