@@ -57,7 +57,7 @@ class StoreInventoryAdmin(admin.ModelAdmin):
             pass
         if request.user.is_superuser:
             return qs
-        elif request.user.groups.filter(
+        if request.user.groups.filter(
             name='Gerente').exists() or request.user.groups.filter(
                 name='Administrador').exists():
             qs_store = qs.filter(store=employe.store.id)
@@ -116,22 +116,41 @@ class DetailEntryInline(admin.TabularInline):
     min_num = 1
     extra = 0
     autocomplete_fields = ('product', 'provider')
+    readonly_fields = ('subtotal',)
 
 
 @admin.register(Entry)
 class Entry(admin.ModelAdmin):
     '''Admin View for Transfer'''
 
-    # list_display = ('',)
+    list_display = ('createDate', 'destiny', 'total', 'userCreation')
     # list_filter = ('',)
     inlines = [
         DetailEntryInline,
     ]
     # raw_id_fields = ('',)
     # readonly_fields = ('',)
-    # search_fields = ('',)
+    search_fields = ('userCreation', 'createDate')
     # date_hierarchy = ''
     # ordering = ('',)
+
+    # Definimos que el listado se muestre solo a los empleados
+    def get_queryset(self, request, *args, **kwargs):
+        qs = super(Entry, self).get_queryset(
+            request, *args, **kwargs)
+        try:
+            employe = Employe.objects.filter(user=request.user).get()
+        except:
+            pass
+        if request.user.is_superuser:
+            return qs
+        if request.user.groups.filter(
+            name='Gerente').exists() or request.user.groups.filter(
+                name='Administrador').exists():
+            qs_store = qs.filter(destiny=employe.store.id)
+            return qs_store
+        else:
+            return None
 
     # Definimos que se muestren solo nuestra tienda
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -142,5 +161,3 @@ class Entry(admin.ModelAdmin):
         except:
             pass
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-admin.site.register(DetailEntry)

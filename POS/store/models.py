@@ -30,27 +30,11 @@ class Store(BaseModel):
         verbose_name = 'Tienda'
         verbose_name_plural = 'Tiendas'
 
-class StoreInventory(BaseModel):
-    store = models.ForeignKey(
-        Store, on_delete=models.CASCADE, verbose_name='Tienda')
-    product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, verbose_name='Producto')
-    stocks = models.PositiveIntegerField('Existencias', default=0)
-    
-    def __str__(self):
-        return '%s, %s' % (self.product, self.stocks)
-
-    class Meta:
-        permissions = [('can_deliver_pizzas', 'Can deliver pizzas')]
-        db_table = ''
-        managed = True
-        unique_together = ['store', 'product']
-        verbose_name = 'Inventario en Tienda'
-        verbose_name_plural = 'Inventario en Tiendas'
-
 class BaseMove(BaseModel):
     comentary = models.TextField('Comentario')
-    total = models.DecimalField('Subtotal', max_digits=12, decimal_places=2, editable=False, blank=True, null=True)
+    total = models.DecimalField(
+        'Total', max_digits=12, decimal_places=2, editable=False,
+        blank=True, null=True, default=0.0)
 
 
     def __str__(self):
@@ -70,13 +54,10 @@ class BaseDetailMove(BaseModel):
     expiration = models.DateField(
         'Fecha de Expiracion', blank=True, null=True,
         help_text='Indispensable para productos perecederos')
-    subtotal = models.DecimalField('Subtotal', max_digits=10, decimal_places=2, editable=False)
+    subtotal = models.DecimalField('Subtotal', max_digits=10, decimal_places=2)
 
     def __str__(self):
         return (self.proproduct, self.quantity, self.subtotal)
-    
-    def calculate_subtotal(self):
-        self.subtotal = self.product.price_in * self.quantity
 
     class Meta:
         abstract = True
@@ -134,12 +115,15 @@ class DetailTransfer(BaseDetailMove):
     
     def add_destiny_stock(self):
         try:
-            obj = StoreInventory.objects.get(id=self.tranfer.destiny.id, product=self.product.id)
+            obj = StoreInventory.objects.filter(store=self.entry.destiny, product=self.product).get()
             obj.stocks += self.quantity
             obj.save()
         except StoreInventory.DoesNotExist:
             obj = StoreInventory(store=self.destiny, product=self.product, stocks=self.quantity)
             obj.save()
+    
+    def calculate_subtotal(self):
+        self.subtotal = self.product.price_in * self.quantity
 
 
     def clean(self) -> None:
@@ -163,8 +147,11 @@ class Entry(BaseMove):
         verbose_name_plural = 'Entradas'
     
     def calculate_total(self):
+        total = 0
         for detail in DetailEntry.objects.filter(entry=self.id):
-            self.total += detail.subtotal 
+            print(detail)
+            total += detail.subtotal
+        self.total = total
 
     def clean(self) -> None:
         self.calculate_total()
@@ -187,15 +174,48 @@ class DetailEntry(BaseDetailMove):
 
     def add_destiny_stock(self):
         try:
-            obj = StoreInventory.objects.get(id=self.entry.destiny.id, product=self.product.id)
+            obj = StoreInventory.objects.filter(entry=self.entry, product=self.product).get()
+            print(obj)
             obj.stocks += self.quantity
             obj.save()
         except StoreInventory.DoesNotExist:
-            obj = StoreInventory(store=self.entry.destiny, product=self.product, stocks=self.quantity)
+            obj = StoreInventory(
+                store=self.entry.destiny, product=self.product, stocks=self.quantity, entry=self.entry)
             obj.save()
+
+    def calculate_subtotal(self):
+        self.subtotal = float(self.product.price_in) * float(self.quantity)
         
 
     def clean(self) -> None:
-        self.calculate_subtotal()
-        self.add_destiny_stock()
         return super().clean()
+    
+    def save(self):
+        self.add_destiny_stock()
+        self.calculate_subtotal()
+        super(DetailEntry, self).save()
+
+class StoreInventory(BaseModel):
+    store = models.ForeignKey(
+        Store, on_delete=models.CASCADE, verbose_name='Tienda')
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, verbose_name='Producto')
+    stocks = models.PositiveIntegerField('Existencias', default=0)
+    entry = models.ForeignKey(
+        Entry, on_delete=models.CASCADE, blank=True, null=True,
+        editable=False)
+    transfer = models.ForeignKey(
+        Transfer, on_delete=models.CASCADE, blank=True, null=True,
+        editable=False)
+
+    
+    def __str__(self):
+        return '%s, %s' % (self.product, self.stocks)
+
+    class Meta:
+        permissions = [('can_deliver_pizzas', 'Can deliver pizzas')]
+        db_table = ''
+        managed = True
+        unique_together = ['store', 'product']
+        verbose_name = 'Inventario en Tienda'
+        verbose_name_plural = 'Inventario en Tiendas'

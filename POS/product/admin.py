@@ -7,8 +7,9 @@ from .models import Product, Category
 class CategoryAdmin (admin.ModelAdmin):
     list_display = ('name', 'description', 'userCreation', 'userUpdate')
     search_fields = ('name',)
+
 class ProductAdmin (admin.ModelAdmin):
-   list_display = ('name', 'description', 'userCreation', 'userUpdate')
+   list_display = ('name', 'description', 'userCreation', 'userUpdate', 'price_in', 'price_out')
    search_fields = ('name',)
    list_filter = ('category','state')
    list_per_page = 10
