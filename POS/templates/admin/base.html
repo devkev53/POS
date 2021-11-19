@@ -3,6 +3,8 @@
 <html lang="{{ LANGUAGE_CODE|default:"en-us" }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
 <head>
 <title>{% block title %}{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'fontawesome-free/css/all.css' %}">
+
 <link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static "admin/css/base.css" %}{% endblock %}">
 {% if not is_popup and is_nav_sidebar_enabled %}
   <link rel="stylesheet" type="text/css" href="{% static "admin/css/nav_sidebar.css" %}">
@@ -36,11 +38,16 @@
         {% if has_permission %}
         <div class="dropdown">
           <button onclick="myFunction()" class="dropbtn">
+            <i class="fas fa-user"></i>
             {% firstof user.get_short_name user.get_username %}
           </button>
           <div id="myDropdown" class="dropdown-content">
-            <a href="{% url 'admin:password_change' %}">{% translate 'Change password' %}</a>
-            <a class="closeSesion" href="{% url 'admin:logout' %}">{% translate 'Log out' %}</a>
+            <a href="{% url 'admin:password_change' %}">
+              <i class="fas fa-unlock-alt"></i>{% translate 'Change password' %}
+            </a>
+            <a class="closeSesion" href="{% url 'admin:logout' %}">
+              <i class="fas fa-power-off"></i>{% translate 'Log out' %}
+            </a>
           </div>
         </div>
         <!-- <div id="user-tools">
