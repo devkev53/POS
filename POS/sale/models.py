@@ -3,7 +3,8 @@ from core.models import BaseModel
 from store.models import StoreInventory, Store
 from product.models import Product
 from employe.models import Employe
-
+from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
 # Create your models here.
 
 STATEBOX_CHOICES = (
@@ -16,33 +17,43 @@ class SaleBox(BaseModel):
 
     # TODO: Define fields here
     initial_mount = models.DecimalField(
-        'Monto de Apertura', editable=False, max_digits=8, decimal_places=2)
+        'Monto de Apertura', editable=False, max_digits=8, decimal_places=2, default=0.00)
     final_mount = models.DecimalField(
-        'Monto de Apertura', editable=False, max_digits=8, decimal_places=2)
+        'Monto de Apertura', editable=False, max_digits=8, decimal_places=2, default=0.00)
     state = models.BooleanField(
         'Estado de la Caja', help_text='Al crear la caja se apertura abierta por default',
         choices=STATEBOX_CHOICES, default=True)
-    store = models.ForeignKey(Store, on_delete=models.CASCADE, editable=False)
+    store = models.ForeignKey(
+        Store, on_delete=models.CASCADE, editable=False, verbose_name='Tienda')
 
     class Meta:
         """Meta definition for Caja."""
 
-        unique_together = []
         verbose_name = 'Caja'
         verbose_name_plural = 'Cajas'
 
     def __str__(self):
         """Unicode representation of MODELNAME."""
-        pass
+        return '%s, %s, %s' % (self.store, self.state, self.createDate)
 
-    def save(self):
-        super(DetailSale, self).save()
+    '''def clean(self):
+        if SaleBox.objects.exists():
+            last = SaleBox.objects.filter(store=self.store).last()
+            if last.id != self.id:
+                if last.state == True:
+                    raise ValidationError(
+                        'Existe una caja abierta')
+        return super().clean()'''
 
     # TODO: Define custom methods here
 
     # Metodo para mostrar el monto inicial de la caja anterior
     def charge_initial_mount(self):
-        return 0
+        if SaleBox.objects.filter(store=self.store).exists():
+            last = SaleBox.objects.filter(store=self.store).last()
+            self.initial_mount = last.final_mount
+        else:
+            self.initial_mount = 0.00
 
 
     # Metodo para cerrar la caja y dejar el monto final
@@ -52,11 +63,11 @@ class SaleBox(BaseModel):
 
 
 class Sale(BaseModel):
-    Store = models.ForeignKey(Store, on_delete=models.CASCADE)
     client = models.CharField('Cliente', max_length=75)
     nit = models.CharField('NIT', max_length=9, default='C/F')
     address = models.CharField('Direccion', max_length=75, default='Ciudad')
     total = models.DecimalField('Total', max_digits=8, decimal_places=2, default=0.00)
+    salebox = models.ForeignKey(SaleBox, on_delete=models.CASCADE)
 
     def __str__(self):
         return '%s, %s, %s' % (self.createDate, self.client, self.total)
@@ -66,6 +77,14 @@ class Sale(BaseModel):
         managed = True
         verbose_name = 'Venta'
         verbose_name_plural = 'Ventas'
+
+    def clean(self):
+        if SaleBox.objects.exists(store=self.salebox.store):
+            pass
+        else:
+            raise ValidationError(
+                'La tienda no tiene una caja abiarta')
+        return super().clean()
 
 
 class DetailSale(BaseModel):

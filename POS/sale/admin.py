@@ -1,11 +1,31 @@
 from django.contrib import admin
 from .models import Sale, DetailSale, SaleBox
+from store.models import Store
 from employe.models import Employe
 from django.contrib.auth.models import User
+from import_export.admin import ImportExportModelAdmin
+
 
 from rangefilter.filters import DateRangeFilter, DateTimeRangeFilter
 
 # Register your models here.
+
+# Funcion para mostrar unicamente el QuerySet de la tienda asingada al usuario
+def set_queryset_employe(request):
+        try:
+            employe = Employe.objects.filter(user=request.user).get()
+        except:
+            pass
+        if request.user.is_superuser:
+            return qs
+        if request.user.groups.filter(
+            name='Gerente').exists() or request.user.groups.filter(
+                name='Administrador').exists():
+            qs_store = qs.filter(store=employe.store.id)
+            return qs_store
+        else:
+            return None
+
 
 class DetailSaleInline(admin.TabularInline):
     '''Tabular Inline View for DetailSale'''
@@ -52,3 +72,48 @@ class SaleBoxAdmin(admin.ModelAdmin):
     # search_fields = ('',)
     # date_hierarchy = ''
     # ordering = ('',)
+    actions = ['cloxe_box',]
+
+    # Metodo Para Cerra Caja
+    def close_box(self, request, queryset):
+        for row in queryset.filter(state=True):
+            self.log_change(request, row, 'Cerrar Caja')
+        rows_update = 0
+
+        for obj in queryset:
+            if not obj.state:
+                obj.state = False
+                obj.save()
+
+                rows_update += 1
+        if rows_update == 1:
+            message_bit = 'Caja Cerrada'
+        else:
+            message_bit = '%s Cajas Cerradas' % rows_update
+            self.message_user(request, '%s satisfactoriamente como cerradas' % message_bit)
+    close_box.short_description = 'Cerrar Caja'
+
+    def save_model(self, request, obj, form, change):
+        empleado = Employe.objects.filter(user=request.user).get()
+        empleado_store = Store.objects.filter(id=empleado.store.id).get()
+        obj .store = empleado_store
+        super().save_model(request, obj, form, change)
+
+    '''def get_queryset(self, request, *args, **kwargs):
+        qs = super(SaleBoxAdmin, self).get_queryset(
+            request, *args, **kwargs)
+        try:
+            employe = Employe.objects.filter(user=request.user).get()
+        except:
+            pass
+        if request.user.is_superuser:
+            return qs
+        if request.user.groups.filter(
+            name='Gerente').exists() or request.user.groups.filter(
+                name='Administrador').exists():
+            qs_store = qs.filter(store=employe.store.id)
+            return qs_store
+        else:
+            return None'''
+
+    

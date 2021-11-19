@@ -33,7 +33,14 @@ class Employe(BaseModel):
             name = self.user.username
         return name
 
+    def disponibles(self):
+        list = []
+        for u in User.objects.select_related():
+            list.append(u)
+        return User.objects.select_related()
+
     class Meta:
+        unique_together = [('user', 'store'), ()]
         db_table = ''
         managed = True
         verbose_name = 'Empleado'

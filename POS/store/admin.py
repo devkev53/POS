@@ -8,8 +8,11 @@ from employe.models import Employe
 from django.contrib.auth.models import User
 
 from rangefilter.filters import DateRangeFilter, DateTimeRangeFilter
+from import_export.admin import ImportExportModelAdmin
+
 
 # Register your models here.
+
 
 # Metodo que cambia el estado de las Entradas o Movimientos
 def change_state(self, val, request, queryset):
@@ -54,7 +57,7 @@ class StoreInventoryAdmin(admin.ModelAdmin):
     # inlines = [Inline,]
     # raw_id_fields = ('',)
     # readonly_fields = ('store',)
-    search_fields = ('product__name',)
+    search_fields = ('product__name', 'product')
     autocomplete_fields = ('product',)
     # date_hierarchy = ''
     # ordering = ('',)
@@ -189,7 +192,7 @@ class EntryAdmin(admin.ModelAdmin):
         DetailEntryInline,
     ]
     # raw_id_fields = ('',)
-    # readonly_fields = ('',)
+    readonly_fields = ('destiny', 'state')
     search_fields = ('userCreation', 'createDate')
     # date_hierarchy = ''
     # ordering = ('',)
@@ -239,6 +242,13 @@ class EntryAdmin(admin.ModelAdmin):
     def reject_entry(self, request, queryset, *args, **kwargs):
         change_state(self, 2, request, queryset)
     reject_entry.short_description = 'Rechazar Entradas'
+
+    def save_model(self, request, obj, form, change):
+        empleado = Employe.objects.filter(user=request.user).get()
+        store = Store.objects.filter(id=empleado.store.id).get()
+        obj .destiny = store
+        super().save_model(request, obj, form, change)
+
 
 
 
