@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Sale, DetailSale
+from .models import Sale, DetailSale, SaleBox
 from employe.models import Employe
 from django.contrib.auth.models import User
 
@@ -36,3 +36,19 @@ class SaleAdmin(admin.ModelAdmin):
     # Funcion para mostrar el rango de fechas en el filtro
     def get_rangefilter_created_at_title(self, request, field_path):
         return 'custom title'
+
+
+@admin.register(SaleBox)
+class SaleBoxAdmin(admin.ModelAdmin):
+    '''Admin View for '''
+
+    # list_display = ('',)
+    # list_filter = ('',)
+    # inlines = [
+    #     Inline,
+    # ]
+    # raw_id_fields = ('',)
+    readonly_fields = ('store', 'createDate', 'state')
+    # search_fields = ('',)
+    # date_hierarchy = ''
+    # ordering = ('',)

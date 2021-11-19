@@ -136,7 +136,7 @@ class TransferAdmin(admin.ModelAdmin):
         if request.user.groups.filter(
             name='Gerente').exists() or request.user.groups.filter(
             name='Administrador').exists():
-            qs_store = qs.filter(destiny=employe.store.id)
+            qs_store = qs.filter(destiny=employe.store.id) | qs.filter(origin=employe.store.id)
             return qs_store
         else:
             return None

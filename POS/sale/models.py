@@ -1,12 +1,58 @@
 from django.db import models
 from core.models import BaseModel
-from store.models import StoreInventory
+from store.models import StoreInventory, Store
 from product.models import Product
+from employe.models import Employe
 
 # Create your models here.
 
+STATEBOX_CHOICES = (
+    (True, 'Caja Abierta'),
+    (False, 'Caja Cerrada'),
+)
+
+class SaleBox(BaseModel):
+    """Model definition for Box."""
+
+    # TODO: Define fields here
+    initial_mount = models.DecimalField(
+        'Monto de Apertura', editable=False, max_digits=8, decimal_places=2)
+    final_mount = models.DecimalField(
+        'Monto de Apertura', editable=False, max_digits=8, decimal_places=2)
+    state = models.BooleanField(
+        'Estado de la Caja', help_text='Al crear la caja se apertura abierta por default',
+        choices=STATEBOX_CHOICES, default=True)
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, editable=False)
+
+    class Meta:
+        """Meta definition for Caja."""
+
+        unique_together = []
+        verbose_name = 'Caja'
+        verbose_name_plural = 'Cajas'
+
+    def __str__(self):
+        """Unicode representation of MODELNAME."""
+        pass
+
+    def save(self):
+        super(DetailSale, self).save()
+
+    # TODO: Define custom methods here
+
+    # Metodo para mostrar el monto inicial de la caja anterior
+    def charge_initial_mount(self):
+        return 0
+
+
+    # Metodo para cerrar la caja y dejar el monto final
+    def close_box(self):
+        return 0
+
+
 
 class Sale(BaseModel):
+    Store = models.ForeignKey(Store, on_delete=models.CASCADE)
     client = models.CharField('Cliente', max_length=75)
     nit = models.CharField('NIT', max_length=9, default='C/F')
     address = models.CharField('Direccion', max_length=75, default='Ciudad')
